@@ -71,7 +71,6 @@ fn link_cpp(build: &mut Build) {
 }
 
 fn build_rocksdb() -> Build {
-    let mut build = Build::new();
     for e in env::vars() {
         println!("{:?}", e);
     }
@@ -96,6 +95,8 @@ fn build_rocksdb() -> Build {
         .define("WITH_SNAPPY", "ON")
         .build_target("rocksdb")
         .build();
+
+    let mut build = Build::new();
     let build_dir = format!("{}/build", dst.display());
     if cfg!(target_os = "windows") {
         let profile = match &*env::var("PROFILE").unwrap_or("debug".to_owned()) {
