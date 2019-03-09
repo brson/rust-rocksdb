@@ -18,6 +18,7 @@ default = []
 valgrind = []
 portable = ["librocksdb_sys/portable"]
 sse = ["librocksdb_sys/sse"]
+shared-lib = ["librocksdb_sys/shared-lib"]
 
 [dependencies]
 libc = "0.2.11"

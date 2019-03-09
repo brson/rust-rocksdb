@@ -27,7 +27,11 @@ fn main() {
         build.flag("-std=c++11");
         build.flag("-fno-rtti");
     }
-    link_cpp(&mut build);
+    if cfg!(not(feature = "shared-lib")) {
+        // If we're dynamically linking rocksdb then let's assume we want to
+        // dynamically link libstd++
+        link_cpp(&mut build);
+    }
     build.warnings(false).compile("libcrocksdb.a");
 }
 
@@ -82,6 +86,11 @@ fn build_rocksdb() -> Build {
     if cfg!(feature = "sse") {
         cfg.define("FORCE_SSE42", "ON");
     }
+    let target = if cfg!(not(feature = "shared-lib")) {
+        "rocksdb"
+    } else {
+        "rocksdb-shared"
+    };
     let dst = cfg
         .register_dep("Z")
         .define("WITH_ZLIB", "ON")
@@ -93,7 +102,7 @@ fn build_rocksdb() -> Build {
         .define("WITH_ZSTD", "ON")
         .register_dep("SNAPPY")
         .define("WITH_SNAPPY", "ON")
-        .build_target("rocksdb")
+        .build_target(target)
         .build();
 
     let mut build = Build::new();
@@ -119,7 +128,12 @@ fn build_rocksdb() -> Build {
     build.include(cur_dir.join("rocksdb").join("include"));
     build.include(cur_dir.join("rocksdb"));
 
-    println!("cargo:rustc-link-lib=static=rocksdb");
+    if cfg!(not(feature = "shared-lib")) {
+        println!("cargo:rustc-link-lib=static=rocksdb");
+    } else {
+        println!("cargo:rustc-link-lib=dylib=rocksdb");
+    }
+    // TODO: I don't think these do anything
     println!("cargo:rustc-link-lib=static=z");
     println!("cargo:rustc-link-lib=static=bz2");
     println!("cargo:rustc-link-lib=static=lz4");
